@@ -4,19 +4,19 @@ const app = express();
 
 app.use(express.json());
 
-// Configuration de votre transporteur d'e-mail (ex: Gmail ou autre SMTP)
+// Configuration de votre transporteur d'e-mail (Gmail)
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'chepitimayassecurite@gmail.com',
-        pass: 'dgabase2025' // Pensez idéalement à utiliser une variable d'environnement pour le mot de passe en production
+        pass: 'dgabase2025' // Idéalement à remplacer par une variable d'environnement plus tard
     }
 });
 
 app.post('/api/pointage', (req, res) => {
     const { agentNom, clientEmail, clientNom, dateHeure } = req.body;
     
-    console.log("Données reçues :", { agentNom, clientEmail, clientNom, dateHeure });
+    console.log("Données reçues de Google Sheets :", { agentNom, clientEmail, clientNom, dateHeure });
 
     // Configuration de l'e-mail à envoyer au client
     const mailOptions = {
@@ -37,7 +37,7 @@ app.post('/api/pointage', (req, res) => {
     });
 });
 
-// Utilisation du port dynamique fourni par l'hébergeur cloud, ou 3000 par défaut en local
+// Utilisation du port dynamique fourni par Render, ou 3000 par défaut en local
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
