@@ -1,48 +1,42 @@
 const express = require('express');
-const nodemailer = require('nodemailer');
 const app = express();
 
 app.use(express.json());
 
-// Configuration de votre transporteur d'e-mail (Gmail)
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'chepitimayassecurite@gmail.com',
-        pass: 'dgabase2025' // Idéalement à remplacer par une variable d'environnement plus tard
-    }
-});
-app.get('/', (req, res) => {
-    res.status(200).send("Serveur de pointage Chepitimayas en ligne !");
-});
-
-app.post('/api/pointage', (req, res) => {
+app.post('/api/pointage', async (req, res) => {
     const { agentNom, clientEmail, clientNom, dateHeure } = req.body;
     
     console.log("Données reçues de Google Sheets :", { agentNom, clientEmail, clientNom, dateHeure });
 
-    // Configuration de l'e-mail à envoyer au client
-    const mailOptions = {
-        from: 'chepitimayassecurite@gmail.com',
-        to: clientEmail,
-        subject: `Confirmation de passage - ${clientNom}`,
-        text: `Bonjour, nous vous informons que l'agent ${agentNom} est bien arrivé sur votre site (${clientNom}) le ${dateHeure}.`
-    };
+    try {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.BREVO_API_KEY, // Votre clé API Brevo
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: { email: "chepitimayassecurite@gmail.com", name: "Sécurité Pointage" },
+                to: [{ email: clientEmail }],
+                subject: `Confirmation de passage - ${clientNom}`,
+                textContent: `Bonjour, nous vous informons que l'agent ${agentNom} est bien arrivé sur votre site (${clientNom}) le ${dateHeure}.`
+            })
+        });
 
-    // Envoi de l'e-mail
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.log("Erreur lors de l'envoi de l'e-mail :", error);
-            return res.status(500).send("Erreur serveur");
+        if (!response.ok) {
+            throw new Error(`Erreur API Brevo: ${response.statusText}`);
         }
-        console.log("E-mail envoyé avec succès :", info.response);
+
+        console.log("E-mail envoyé avec succès via l'API Brevo");
         res.status(200).send("Pointage enregistré et e-mail envoyé");
-    });
+    } catch (error) {
+        console.log("Erreur lors de l'envoi de l'e-mail :", error);
+        res.status(500).send("Erreur serveur");
+    }
 });
 
-// Utilisation du port dynamique fourni par Render, ou 3000 par défaut en local
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-    console.log(`Serveur Node.js en écoute sur le port ${PORT}`);
+    console.log(`Serveur en écoute sur le port ${PORT}`);
 });
