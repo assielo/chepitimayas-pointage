@@ -12,6 +12,9 @@ const transporter = nodemailer.createTransport({
         pass: 'dgabase2025' // Idéalement à remplacer par une variable d'environnement plus tard
     }
 });
+app.get('/', (req, res) => {
+    res.status(200).send("Serveur de pointage Chepitimayas en ligne !");
+});
 
 app.post('/api/pointage', (req, res) => {
     const { agentNom, clientEmail, clientNom, dateHeure } = req.body;
